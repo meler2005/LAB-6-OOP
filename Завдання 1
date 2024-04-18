@@ -1,0 +1,142 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+
+// Інтерфейс для деталі
+interface IDetail : IComparable<Detail>
+{
+    string GetDetailsInfo(); // Метод для отримання інформації про деталь
+}
+
+// Клас, що представляє деталь
+class Detail : IDetail
+{
+    // Властивості деталі
+    public string Name { get; set; } // Назва
+    public string Type { get; set; } // Тип
+    public int Quantity { get; set; } // Кількість
+    public int WeightPerPiece { get; set; } // Вага одного екземпляру
+
+    // Конструктор класу Detail
+    public Detail(string name, string type, int quantity, int weightPerPiece)
+    {
+        Name = name;
+        Type = type;
+        Quantity = quantity;
+        WeightPerPiece = weightPerPiece;
+    }
+
+    // Реалізація методу з інтерфейсу для отримання інформації про деталь
+    public string GetDetailsInfo()
+    {
+        return $"{Name}, Тип: {Type}, Кількість: {Quantity}, Вага за одиницю: {WeightPerPiece} г";
+    }
+
+    // Реалізація методу з інтерфейсу IComparable<T>
+    public int CompareTo(Detail other)
+    {
+        return Name.CompareTo(other.Name);
+    }
+}
+
+// Узагальнений клас CollectionType<T>
+class CollectionType<T> : IEnumerable<T> where T : IComparable<T>
+{
+    private List<T> items;
+
+    public CollectionType()
+    {
+        items = new List<T>();
+    }
+
+    public void Add(T item)
+    {
+        items.Add(item);
+    }
+
+    public void Remove(T item)
+    {
+        items.Remove(item);
+    }
+
+    public int Count => items.Count;
+
+    public T this[int index]
+    {
+        get { return items[index]; }
+        set { items[index] = value; }
+    }
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        return items.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public IEnumerable<T> Where(Func<T, bool> predicate)
+    {
+        return items.Where(predicate);
+    }
+
+    public IEnumerable<TResult> Select<TResult>(Func<T, TResult> selector)
+    {
+        return items.Select(selector);
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        // Створення об'єктів деталей
+        Detail Фланець = new Detail("Фланець", "З", 3, 450);
+        Detail Перехідник = new Detail("Перехідник", "К", 8, 74);
+        Detail Станина = new Detail("Станина", "Про", 1, 117050);
+
+        // Створення колекцій об'єктів CollectionType<Detail>
+        var collection1 = new CollectionType<Detail>();
+        collection1.Add(Фланець);
+        collection1.Add(Перехідник);
+
+        var collection2 = new CollectionType<Detail>();
+        collection2.Add(Станина);
+
+        // Виконання LINQ-запитів
+        var query1 = collection1.Where(d => d.Quantity > 5);
+        var query2 = collection2.Select(d => d.Name);
+
+        // Вивід результатів LINQ-запитів
+        Console.WriteLine("Результат LINQ-запитів:");
+        foreach (var item in query1)
+        {
+            Console.WriteLine(item.GetDetailsInfo());
+        }
+        foreach (var item in query2)
+        {
+            Console.WriteLine(item);
+        }
+
+        // Створення ArrayList<CollectionType<Detail>>
+        var arrayList = new ArrayList();
+        arrayList.Add(collection1);
+        arrayList.Add(collection2);
+
+        // Виконання складних запитів LINQToObject
+        int threshold = 100;
+        var query3 = arrayList.Cast<CollectionType<Detail>>().Count(c => c.Select(d => d.Quantity).Sum() > threshold);
+        var query4 = arrayList.Cast<CollectionType<Detail>>().Max(c => c.Count);
+        var query5 = arrayList.Cast<CollectionType<Detail>>().Min(c => c.Count);
+
+        // Вивід результатів складних запитів LINQToObject
+        Console.WriteLine("Результати складних LINQToObject запитів:");
+        Console.WriteLine($"Кількість колекцій з сумою більше {threshold}: {query3}");
+        Console.WriteLine($"Максимальна кількість елементів у колекціях: {query4}");
+        Console.WriteLine($"Мінімальна кількість елементів у колекціях: {query5}");
+
+    }
+}
